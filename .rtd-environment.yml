@@ -1,0 +1,12 @@
+name: flarepy
+
+channels:
+    - astropy
+
+dependencies:
+    - astropy
+    - Cython
+    - matplotlib
+    - numpy
+#   - pip:
+#       - dependency_from_pip
