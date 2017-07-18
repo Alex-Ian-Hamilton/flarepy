@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 #from sunpy.time import TimeRange
 from datetime import timedelta, datetime
-import flarepy.utils as utils
+#import flarepy.utils as utils
 
 """
     Create a simple sine bumps as a proxy for flares.
@@ -170,4 +170,4 @@ def gen_synthetic_goes_xrs():
     fig.savefig('C:\\flare_outputs\\2017-07-06\\generated_data\\test.png', dpi=900, bbox_inches='tight')
 
 
-gen_synthetic_goes_xrs()
+#gen_synthetic_goes_xrs()

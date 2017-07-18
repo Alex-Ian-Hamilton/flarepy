@@ -41,7 +41,7 @@ def find_maxima_fast(arr_inputs):
     arr_boo_peak = np.logical_and((arr_boo_roll_plus < arr_inputs),
                                   (arr_boo_roll_minus < arr_inputs))
 
-    return np.where(arr_boo_peak)
+    return np.where(arr_boo_peak)[0]
 
 def find_maxima_mid(arr_inputs):
     """
@@ -168,7 +168,7 @@ def find_minima_fast(arr_inputs):
     arr_boo_peak = np.logical_and((arr_boo_roll_plus > arr_inputs),
                                   (arr_boo_roll_minus > arr_inputs))
 
-    return np.where(arr_boo_peak)
+    return np.where(arr_boo_peak)[0]
 
 def find_minima_mid(arr_inputs):
     """

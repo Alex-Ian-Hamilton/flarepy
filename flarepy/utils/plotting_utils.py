@@ -281,7 +281,7 @@ def plot_goes_old(df_data, lis_peaks=None, title="GOES Xray Flux"):
 
 
 
-def plot_goes(dic_lines, dic_peaks=None, title="GOES Xray Flux", ylim=(1e-10, 1e-2), xlabel=None, textlabels=None, legncol=3):
+def plot_goes(dic_lines, dic_peaks=None, dic_regions=None, dic_fills=None, title="GOES Xray Flux", ylim=(1e-10, 1e-2), xlabel=None, textlabels=None, legncol=3):
     """Plots GOES XRS light curve in the usual manner.
     The basic template was taken from the sunpy.timeseries.XRSTimeSeries class.
     It now additionally adds the ability to add an arbitrary number of lines and sets of marks.
@@ -299,10 +299,20 @@ def plot_goes(dic_lines, dic_peaks=None, title="GOES Xray Flux", ylim=(1e-10, 1e
         Working on allowing dataframes and other objects.
 
 
-    dic_peaks :
+    dic_peaks: `dict`
         Contains pandas.Series for each set of marks, with key for the name.
         If the name matches a pre-defined one in the function, then the matching
         mark visual specifications will be applied.
+
+    dic_fills: `dict`
+        Contains pandas.Series or pandas.DataFrame for each region you want to
+        fill, with key for the name.
+        If the name matches a pre-defined one in the function, then the matching
+        fill visual specifications will be applied.
+        If a series is given this is assumed to be the upper bound and lower
+        bound is assumed to be constant 0.0.
+        If a dataframe is given the headings should be "upper" and "lower" or
+        the first will be assumed to be the lower.
 
     ylim : `tuple` ((1e-10, 1e-2))
         Manually chance the y-axis limits.
@@ -352,7 +362,10 @@ def plot_goes(dic_lines, dic_peaks=None, title="GOES Xray Flux", ylim=(1e-10, 1e
         if isinstance(value, pd.Series):
             dic_seperated_lines[key] = value
 
-    # Now plot each line
+
+    ####################
+    # Adding Lines
+    ####################
     # Some parameters for specifc lines
     dic_line_settings = {#                    lw,  col,   line,     alpha,   label,                     markevery, zorder
                          'xrsa':             (0.6 , 'red',  '-', 0.9, 'XRSA: 0.5 — 4.0 $\AA$',           'None', 5),
@@ -373,8 +386,10 @@ def plot_goes(dic_lines, dic_peaks=None, title="GOES Xray Flux", ylim=(1e-10, 1e
             axes.plot_date(dates, value.values, '-',
                            label='series', color='blue', lw=1)
 
+    ####################
+    # Adding Peaks
+    ####################
 
-    # Adding all peaks
     # Random parameters
     markers = [ 'x', '+', 's', '*', 'D', '1', '8']
     colours = [ 'k', 'b', 'g', 'r', 'c', 'm', 'y'] # c0, c1, c2, ... MPL colour sequence??
@@ -410,6 +425,7 @@ def plot_goes(dic_lines, dic_peaks=None, title="GOES Xray Flux", ylim=(1e-10, 1e
                              'CWT [1, ..., 200]nolab':  (False,   'x' , 6,    'green', 1.0, None, 25),
                              'CWT [1, ..., 300]nolab':  (False,   'x' , 6,    'green', 1.0, None, 25),
                              'CWT [1, ..., 400]nolab':  (False,   'x' , 6,    'green', 1.0, None, 25),
+                             '4-min Rise':              (False,   's' , 4,    'blue',  1.0, '4-min Rise',         22),
                              'HEK':                (False,   '+' , 10,    'red',  1.0, 'HEK Reference Peaks',         21),
                              'HEK-wlines':          (False,   '+' , 10,    'red',  1.0, 'HEK Reference Peaks',         21),
                              'local-max':          (False,   'x' , 8,    'blue',  1.0, 'Local Maxima',         21)
@@ -460,12 +476,27 @@ def plot_goes(dic_lines, dic_peaks=None, title="GOES Xray Flux", ylim=(1e-10, 1e
                 conf = dic_peak_line_settings[key]
                 plt.vlines(peak_dates,-1,1,color=conf[2],linestyles=conf[4],alpha=conf[3],lw=conf[5])
 
-    # Add text bables
+    ####################
+    # Adding Fills
+    ####################
+
+    # Add fills
+    if dic_fills:
+        for fill in dic_fills:
+            arr_upper = fill['upper']
+            arr_lower = fill['lower']
+            axes.fill_between(fill.index, arr_lower, arr_upper, facecolor='yellow', alpha=0.5, label='a fill region')
+
+    ####################
+    # Adding Text Labels
+    ####################
     if textlabels:
         for label in textlabels:
             axes.text(label[0], label[1], label[2], fontsize=label[3])
 
+    ####################
     # Setup the axes
+    ####################
     #axes.set_position([0.1,0.3,0.5,0.5])
     axes.set_yscale("log")
     axes.set_ylim(ylim[0], ylim[1])

@@ -221,3 +221,4 @@ def flare_class_to_intensity(arr_flare_class):
         return lis_classes[0]
     else:
         return lis_classes
+
