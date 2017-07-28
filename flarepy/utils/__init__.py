@@ -4,8 +4,7 @@
 # functions.
 from flarepy.utils.flare_utils import *
 from flarepy.utils.peak_picking_utils import *
-from flarepy.utils.plotting_utils import *
 from flarepy.utils.hek_utils import *
-from flarepy.utils.synthetic_data_generation import *
 from flarepy.utils.flare_energy_utils import *
 from flarepy.utils.flare_start_end_utils import *
+from flarepy.utils.comparison_utils import *

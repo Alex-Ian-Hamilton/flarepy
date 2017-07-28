@@ -3,8 +3,7 @@ running build
 running build_py
 Running Sphinx v1.6.3
 loading pickled environment... failed: Can't get attribute 'WarningStream' on <module 'sphinx.util.nodes' from 'C:\\Users\\Alex\\Anaconda3\\envs\\work-dev\\lib\\site-packages\\sphinx\\util\\nodes.py'>
-loading intersphinx inventory from http://docs.python.org/3/objects.inv...
-intersphinx inventory has moved: http://docs.python.org/3/objects.inv -> https://docs.python.org/3/objects.inv
+loading intersphinx inventory from https://docs.python.org/3/objects.inv...
 loading intersphinx inventory from c:\git\flarepy\astropy_helpers\astropy_helpers\sphinx\local\python3_local_links.inv...
 loading intersphinx inventory from https://docs.scipy.org/doc/numpy/objects.inv...
 loading intersphinx inventory from https://docs.scipy.org/doc/scipy/reference/objects.inv...
@@ -12,3 +11,21 @@ loading intersphinx inventory from http://matplotlib.org/objects.inv...
 loading intersphinx inventory from http://docs.astropy.org/en/stable/objects.inv...
 loading intersphinx inventory from http://docs.h5py.org/en/latest/objects.inv...
 [autosummary] generating autosummary for: api\flarepy.do_primes.rst, api\flarepy.main.rst, api\flarepy.primes.rst, api\flarepy.test.rst, flarepy\index.rst, index.rst
+[automodsumm] flarepy/index.rst: found 4 automodsumm entries to generate
+building [mo]: all of 0 po files
+building [html]: all source files
+updating environment: 6 added, 0 changed, 0 removed
+reading sources... [ 16%] api/flarepy.do_primes                                reading sources... [ 33%] api/flarepy.main                                     reading sources... [ 50%] api/flarepy.primes                                   reading sources... [ 66%] api/flarepy.test                                     reading sources... [ 83%] flarepy/index                                        reading sources... [100%] index                                                
+looking for now-outdated files... none found
+pickling environment... done
+checking consistency... done
+preparing documents... done
+writing output... [ 16%] api/flarepy.do_primes                                 writing output... [ 33%] api/flarepy.main                                      writing output... [ 50%] api/flarepy.primes                                    writing output... [ 66%] api/flarepy.test                                      writing output... [ 83%] flarepy/index                                         writing output... [100%] index                                                 
+generating indices... genindex py-modindex
+highlighting module code... [ 50%] flarepy.example_mod                         highlighting module code... [100%] flarepy._astropy_init                       
+writing additional pages... search
+copying static files... done
+copying extra files... done
+dumping search index in English (code: en) ... done
+dumping object inventory... done
+build succeeded, 16 warnings.

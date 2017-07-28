@@ -86,10 +86,10 @@ def plot_goes_sat_timelines(h5_data):
 
 
     fig, ax = plt.subplots()
-    ax.broken_barh([(110, 30), (150, 10)], (1, 4), facecolors='blue')
-    ax.broken_barh([(110, 30), (150, 10)], (5, 4), facecolors='green')
+    ax.broken_barh([(110, 30), (150, 10)], (1, 4), facecolors='C0')
+    ax.broken_barh([(110, 30), (150, 10)], (5, 4), facecolors='C2')
     ax.broken_barh([(10, 50), (100, 20), (130, 10)], (11, 8),
-                   facecolors=('red', 'yellow', 'green'))
+                   facecolors=('C3', 'yellow', 'C2'))
     ax.set_ylim(0, 35)
     ax.set_xlim(0, 200)
     ax.set_xlabel('seconds since start')
@@ -227,16 +227,16 @@ def plot_goes_old(df_data, lis_peaks=None, title="GOES Xray Flux"):
         for str_col in df_data.columns:
             if str_col is 'xrsa':
                 axes.plot_date(dates, df_data['xrsa'], '-',
-                               label='0.5--4.0 $\AA$', color='blue', lw=1)
+                               label='0.5--4.0 $\AA$', color='C0', lw=1)
             elif str_col is 'xrsb':
                 axes.plot_date(dates, df_data['xrsb'], '-',
-                             label='1.0--8.0 $\AA$', color='red', lw=1)
+                             label='1.0--8.0 $\AA$', color='C3', lw=1)
             else:
                 axes.plot_date(dates, df_data[str_col], '-',
                              label=str_col, color='black', lw=1)
     else:
         axes.plot_date(dates, df_data, '-',
-                      label='series', color='blue', lw=2)
+                      label='series', color='C0', lw=2)
 
 
     # Adding all peaks
@@ -280,8 +280,146 @@ def plot_goes_old(df_data, lis_peaks=None, title="GOES Xray Flux"):
 
 
 
+def plot_goes_miniplots(dic_lines, dic_peaks=None, dic_fills=None, title="GOES Xray Flux", ylim=(1e-10, 1e-2), xlabel=None, textlabels=None, legncol=3, miniplot_peaks=None, miniplot_windows=datetime.timedelta(hours=1), miniplot_save_loc=None):
+    """
+    A method for plotting small plots showing the zoom in of each flare.
+    Mostly follows the interface of plot_goes(), which is what it uses to make the plots.
 
-def plot_goes(dic_lines, dic_peaks=None, dic_regions=None, dic_fills=None, title="GOES Xray Flux", ylim=(1e-10, 1e-2), xlabel=None, textlabels=None, legncol=3):
+    Parameters
+    ----------
+    title : `str` ("GOES Xray Flux")
+        Manually change the title of the plot.
+
+    dic_lines: `dict`
+        Contains lines to plot with keys for the names.
+        Generally designed to take panda.Series for each line to plot.
+        If the name matches a pre-defined one in the function, then the matching
+        line visual specifications will be applied.
+        Working on allowing dataframes and other objects.
+
+
+    dic_peaks: `dict`
+        Contains pandas.Series for each set of marks, with key for the name.
+        If the name matches a pre-defined one in the function, then the matching
+        mark visual specifications will be applied.
+
+    dic_fills: `dict`
+        Contains pandas.Series or pandas.DataFrame for each region you want to
+        fill, with key for the name.
+        If the name matches a pre-defined one in the function, then the matching
+        fill visual specifications will be applied.
+        If a series is given this is assumed to be the upper bound and lower
+        bound is assumed to be constant 0.0.
+        If a dataframe is given the headings should be "upper" and "lower" or
+        the first will be assumed to be the lower.
+
+    ylim : `tuple` ((1e-10, 1e-2))
+        Manually change the y-axis limits.
+
+    xlabel : `str` (None)
+        Manually chance the x-axis label.
+
+    textlabels : `list` (None)
+        A list of text labels, giving the x pos [i][0], y pos [i][1], text [i][2]
+        and fontsize [i][3].
+
+    legncol : `int` (3)
+        Manually change the number of columns used for the legend.
+        The legend is below the x-axis and a width of 3 tends to work well.
+
+    miniplot_peaks : ~`pandas.Series` or ~`pandas.DataFrame` or 'str' (None)
+        The x-axis points to define the centre of each miniplot.
+        This will likely be a string for the key of one of the entries in
+        dic_peaks, bot it can be a completely different pandas DataFrame for
+        versalility.
+
+    miniplot_windows : `~datetime.timedelta` (datetime.timedelta(hours=1))
+        A timedelta for the half-width of the window you want for each miniplot.
+        I may implment a variable with option, but the issue is it make directly
+        comparing miniplots harder.
+
+    miniplot_save_loc : `str` (None)
+        If you want the miniplots saved (which is the easiest way to view/output)
+        then this is the folder to save them into.
+
+    **kwargs : `dict`
+        Any additional plot arguments that should be used when plotting.
+
+    Returns
+    -------
+    fig : `list` of `~matplotlib.Figure`
+        A list of the miniplot figures.
+    """
+    # Sanitize inputs
+    if miniplot_peaks is None:
+        raise ValueError('Need to specify peak locations for miniplots.')
+    if isinstance(miniplot_peaks, str):
+        miniplot_peaks = dic_peaks[miniplot_peaks]
+    if isinstance(miniplot_peaks, pd.Series):
+        # Make contrived start/end times
+        arr_window_start = miniplot_peaks.index - 0.5 * miniplot_windows
+        arr_window_end = miniplot_peaks.index + 0.5 * miniplot_windows
+        dic_data = { 'fl_peakflux': miniplot_peaks.values,
+                     'window_starttime': arr_window_start,
+                     'window_endtime': arr_window_end}
+        miniplot_peaks = pd.DataFrame(data=dic_data, index=miniplot_peaks.index)
+
+    # Now make each of the plots
+    lis_figs = []
+    for index, row in miniplot_peaks.iterrows():
+        #print('row:\n'+str(row))
+        # Get the start/end datetimes
+        dt_start = row['window_starttime']
+        dt_end = row['window_endtime']
+        dt_peak = index
+        #print('dt_start : '+str(dt_start))
+        #print('dt_end : '+str(dt_end))
+
+        # Truncate all the data
+        dic_lines_trunc = {}
+        if not dic_lines is None:
+            for key, pandas in dic_lines.items():
+                # Truncate the data
+                pandas_trunc = pandas.truncate(dt_start, dt_end)
+
+                # Only add to the output if we haven't truncated out all entries
+                if len(pandas_trunc) > 0:
+                    dic_lines_trunc[key] = pandas_trunc
+        dic_peaks_trunc = {}
+        if not dic_peaks is None:
+            for key, pandas in dic_peaks.items():
+                # Truncate the data
+                pandas_trunc = pandas.truncate(dt_start, dt_end)
+
+                # Only add to the output if we haven't truncated out all entries
+                if len(pandas_trunc) > 0:
+                    dic_peaks_trunc[key] = pandas_trunc
+        dic_fills_trunc = {}
+        if not dic_fills is None:
+            for key, pandas in dic_fills.items():
+                # Truncate the data
+                pandas_trunc = pandas.truncate(dt_start, dt_end)
+
+                # Only add to the output if we haven't truncated out all entries
+                if len(pandas_trunc) > 0:
+                    dic_fills_trunc[key] = pandas_trunc
+
+        #### Note: not working with text labels
+
+        # Now plot
+        #print('dic_lines_trunc:'+str(dic_lines_trunc))
+        fig = plot_goes(dic_lines_trunc, dic_peaks=dic_peaks_trunc, dic_fills=dic_fills_trunc, title=title+' - '+str(dt_peak), ylim=(1e-10, 1e-2), xlabel=xlabel, textlabels=None, legncol=legncol)
+        lis_figs.append(fig)
+
+        # Save if specified
+        if not miniplot_save_loc is None:
+            #print('save the minifig')
+            fig.savefig(miniplot_save_loc+str(dt_peak).replace(':','-')+'.png', dpi=900, bbox_inches='tight')
+
+    return lis_figs
+
+
+def plot_goes(dic_lines, dic_peaks=None, dic_fills=None, title="GOES Xray Flux", ylim=(1e-10, 1e-2), xlabel=None, textlabels=None, legncol=3):
     """Plots GOES XRS light curve in the usual manner.
     The basic template was taken from the sunpy.timeseries.XRSTimeSeries class.
     It now additionally adds the ability to add an arbitrary number of lines and sets of marks.
@@ -320,10 +458,13 @@ def plot_goes(dic_lines, dic_peaks=None, dic_regions=None, dic_fills=None, title
     xlabel : `str` (None)
         Manually chance the x-axis label.
 
-    textlabels :  (None)
+    textlabels : `list` (None)
+        A list of text labels, giving the x pos [i][0], y pos [i][1], text [i][2]
+        and fontsize [i][3].
 
     legncol : `int` (3)
         Manually change the number of columns used for the legend.
+        The legend is below the x-axis and a width of 3 tends to work well.
 
     **kwargs : `dict`
         Any additional plot arguments that should be used when plotting.
@@ -368,9 +509,9 @@ def plot_goes(dic_lines, dic_peaks=None, dic_regions=None, dic_fills=None, title
     ####################
     # Some parameters for specifc lines
     dic_line_settings = {#                    lw,  col,   line,     alpha,   label,                     markevery, zorder
-                         'xrsa':             (0.6 , 'red',  '-', 0.9, 'XRSA: 0.5 — 4.0 $\AA$',           'None', 5),
-                         'xrsb':             (0.6 , 'blue', '-', 1.0, 'XRSB: 1.0 — 8.0 $\AA$',           'None', 10),
-                         'xrsb - filtered':  (0.6 , 'blue', '-', 1.0, 'XRSB: 1.0 — 8.0 $\AA$ Filtered',  'None', 10),
+                         'xrsa':             (0.6 , 'C3',  '-', 0.9, 'XRSA: 0.5 — 4.0 $\AA$',           'None', 5),
+                         'xrsb':             (0.6 , 'C0', '-', 1.0, 'XRSB: 1.0 — 8.0 $\AA$',           'None', 10),
+                         'xrsb - filtered':  (0.6 , 'C0', '-', 1.0, 'XRSB: 1.0 — 8.0 $\AA$ Filtered',  'None', 10),
                          'xrsa - raw':       (1 , 'grey', '-', 0.5, 'XRSA: 1.0 — 8.0 $\AA$ Raw',         'None', 4),
                          'xrsb - raw':       (1 , 'grey', '-', 0.5, 'XRSB: 1.0 — 8.0 $\AA$ Raw',         'None', 9)
                     }
@@ -384,7 +525,7 @@ def plot_goes(dic_lines, dic_peaks=None, dic_regions=None, dic_fills=None, title
                                    label=conf[4], color=conf[1], lw=conf[0], zorder=conf[6])
         else:
             axes.plot_date(dates, value.values, '-',
-                           label='series', color='blue', lw=1)
+                           label='series', color='C0', lw=1)
 
     ####################
     # Adding Peaks
@@ -395,44 +536,44 @@ def plot_goes(dic_lines, dic_peaks=None, dic_regions=None, dic_fills=None, title
     colours = [ 'k', 'b', 'g', 'r', 'c', 'm', 'y'] # c0, c1, c2, ... MPL colour sequence??
     # Pre-set parameters
     dic_peak_mark_settings = {#                      y_fixed, mark, size, col,  alpha,  label,             zorder
-                             'CWT':                (False,   'x' , 6,    'green', 1.0, 'CTW Peaks',        25),
-                             'CWT-wlines':          (False,   'x' , 6,    'green', 1.0, 'CTW Peaks',        25),
-                             'CWT [1, ..., 10]':   (False,   'x' , 6,    'green', 1.0, 'CWT [1, ..., 10]', 25),
-                             'CWT [1, ..., 20]':   (False,   'x' , 6,    'green', 1.0, 'CWT [1, ..., 20]', 25),
-                             'CWT [1, ..., 30]':  (False,   'x' , 6,    'green', 1.0, 'CWT [1, ..., 30]', 25),
-                             'CWT [1, ..., 40]':  (False,   'x' , 6,    'green', 1.0, 'CWT [1, ..., 40]', 25),
-                             'CWT [1, ..., 50]':   (False,   'x' , 6,    'green', 1.0, 'CWT [1, ..., 50]', 25),
-                             'CWT [1, ..., 60]':   (False,   'x' , 6,    'green', 1.0, 'CWT [1, ..., 60]', 25),
-                             'CWT [1, ..., 70]':   (False,   'x' , 6,    'green', 1.0, 'CWT [1, ..., 70]', 25),
-                             'CWT [1, ..., 80]':  (False,   'x' , 6,    'green', 1.0, 'CWT [1, ..., 80]', 25),
-                             'CWT [1, ..., 90]':  (False,   'x' , 6,    'green', 1.0, 'CWT [1, ..., 90]', 25),
-                             'CWT [1, ..., 100]':   (False,   'x' , 6,    'green', 1.0, 'CWT [1, ..., 100]', 25),
-                             'CWT [1, ..., 150]':   (False,   'x' , 6,    'green', 1.0, 'CWT [1, ..., 150]', 25),
-                             'CWT [1, ..., 200]':  (False,   'x' , 6,    'green', 1.0, 'CWT [1, ..., 200]', 25),
-                             'CWT [1, ..., 300]':  (False,   'x' , 6,    'green', 1.0, 'CWT [1, ..., 300]', 25),
-                             'CWT [1, ..., 400]':  (False,   'x' , 6,    'green', 1.0, 'CWT [1, ..., 400]', 25),
-                             'CWT [1, ..., 10]nolab':   (False,   'x' , 6,    'green', 1.0, None, 25),
-                             'CWT [1, ..., 20]nolab':   (False,   'x' , 6,    'green', 1.0, None, 25),
-                             'CWT [1, ..., 30]nolab':  (False,   'x' , 6,    'green', 1.0, None, 25),
-                             'CWT [1, ..., 40]nolab':  (False,   'x' , 6,    'green', 1.0, None, 25),
-                             'CWT [1, ..., 50]nolab':   (False,   'x' , 6,    'green', 1.0, None, 25),
-                             'CWT [1, ..., 60]nolab':   (False,   'x' , 6,    'green', 1.0, None, 25),
-                             'CWT [1, ..., 70]nolab':   (False,   'x' , 6,    'green', 1.0, None, 25),
-                             'CWT [1, ..., 80]nolab':  (False,   'x' , 6,    'green', 1.0, None, 25),
-                             'CWT [1, ..., 90]nolab':  (False,   'x' , 6,    'green', 1.0, None, 25),
-                             'CWT [1, ..., 100]nolab':   (False,   'x' , 6,    'green', 1.0, None, 25),
-                             'CWT [1, ..., 150]nolab':   (False,   'x' , 6,    'green', 1.0, None, 25),
-                             'CWT [1, ..., 200]nolab':  (False,   'x' , 6,    'green', 1.0, None, 25),
-                             'CWT [1, ..., 300]nolab':  (False,   'x' , 6,    'green', 1.0, None, 25),
-                             'CWT [1, ..., 400]nolab':  (False,   'x' , 6,    'green', 1.0, None, 25),
-                             '4-min Rise':              (False,   's' , 4,    'blue',  1.0, '4-min Rise',         22),
-                             'HEK':                (False,   '+' , 10,    'red',  1.0, 'HEK Reference Peaks',         21),
-                             'HEK-wlines':          (False,   '+' , 10,    'red',  1.0, 'HEK Reference Peaks',         21),
-                             'local-max':          (False,   'x' , 8,    'blue',  1.0, 'Local Maxima',         21)
+                             'CWT':                (False,   'x' , 6,    'C2', 1.0, 'CTW Peaks',        25),
+                             'CWT-wlines':          (False,   'x' , 6,    'C2', 1.0, 'CTW Peaks',        25),
+                             'CWT [1, ..., 10]':   (False,   'x' , 6,    'C2', 1.0, 'CWT [1, ..., 10]', 25),
+                             'CWT [1, ..., 20]':   (False,   'x' , 6,    'C2', 1.0, 'CWT [1, ..., 20]', 25),
+                             'CWT [1, ..., 30]':  (False,   'x' , 6,    'C2', 1.0, 'CWT [1, ..., 30]', 25),
+                             'CWT [1, ..., 40]':  (False,   'x' , 6,    'C2', 1.0, 'CWT [1, ..., 40]', 25),
+                             'CWT [1, ..., 50]':   (False,   'x' , 6,    'C2', 1.0, 'CWT [1, ..., 50]', 25),
+                             'CWT [1, ..., 60]':   (False,   'x' , 6,    'C2', 1.0, 'CWT [1, ..., 60]', 25),
+                             'CWT [1, ..., 70]':   (False,   'x' , 6,    'C2', 1.0, 'CWT [1, ..., 70]', 25),
+                             'CWT [1, ..., 80]':  (False,   'x' , 6,    'C2', 1.0, 'CWT [1, ..., 80]', 25),
+                             'CWT [1, ..., 90]':  (False,   'x' , 6,    'C2', 1.0, 'CWT [1, ..., 90]', 25),
+                             'CWT [1, ..., 100]':   (False,   'x' , 6,    'C2', 1.0, 'CWT [1, ..., 100]', 25),
+                             'CWT [1, ..., 150]':   (False,   'x' , 6,    'C2', 1.0, 'CWT [1, ..., 150]', 25),
+                             'CWT [1, ..., 200]':  (False,   'x' , 6,    'C2', 1.0, 'CWT [1, ..., 200]', 25),
+                             'CWT [1, ..., 300]':  (False,   'x' , 6,    'C2', 1.0, 'CWT [1, ..., 300]', 25),
+                             'CWT [1, ..., 400]':  (False,   'x' , 6,    'C2', 1.0, 'CWT [1, ..., 400]', 25),
+                             'CWT [1, ..., 10]nolab':   (False,   'x' , 6,    'C2', 1.0, None, 25),
+                             'CWT [1, ..., 20]nolab':   (False,   'x' , 6,    'C2', 1.0, None, 25),
+                             'CWT [1, ..., 30]nolab':  (False,   'x' , 6,    'C2', 1.0, None, 25),
+                             'CWT [1, ..., 40]nolab':  (False,   'x' , 6,    'C2', 1.0, None, 25),
+                             'CWT [1, ..., 50]nolab':   (False,   'x' , 6,    'C2', 1.0, None, 25),
+                             'CWT [1, ..., 60]nolab':   (False,   'x' , 6,    'C2', 1.0, None, 25),
+                             'CWT [1, ..., 70]nolab':   (False,   'x' , 6,    'C2', 1.0, None, 25),
+                             'CWT [1, ..., 80]nolab':  (False,   'x' , 6,    'C2', 1.0, None, 25),
+                             'CWT [1, ..., 90]nolab':  (False,   'x' , 6,    'C2', 1.0, None, 25),
+                             'CWT [1, ..., 100]nolab':   (False,   'x' , 6,    'C2', 1.0, None, 25),
+                             'CWT [1, ..., 150]nolab':   (False,   'x' , 6,    'C2', 1.0, None, 25),
+                             'CWT [1, ..., 200]nolab':  (False,   'x' , 6,    'C2', 1.0, None, 25),
+                             'CWT [1, ..., 300]nolab':  (False,   'x' , 6,    'C2', 1.0, None, 25),
+                             'CWT [1, ..., 400]nolab':  (False,   'x' , 6,    'C2', 1.0, None, 25),
+                             '4-min Rise':              (False,   's' , 4,    'C0',  1.0, '4-min Rise',         22),
+                             'HEK':                (False,   '+' , 10,    'C3',  1.0, 'HEK Reference Peaks',         21),
+                             'HEK-wlines':          (False,   '+' , 10,    'C3',  1.0, 'HEK Reference Peaks',         21),
+                             'local-max':          (False,   'x' , 8,    'C0',  1.0, 'Local Maxima',         21)
                     }
     dic_peak_line_settings = {#                      ymin,  ymax, colors,  alpha, ls,  lw,  label,        zorder
-                             'CWT-wlines':          (None,  None, 'green', 0.5,   '--', 0.5,       '',           25),
-                             'HEK-wlines':          (None,  None, 'red',   0.5,   'dotted', 0.5,       '',           25),
+                             'CWT-wlines':          (None,  None, 'C2', 0.5,   '--', 0.5,       '',           25),
+                             'HEK-wlines':          (None,  None, 'C3',   0.5,   'dotted', 0.5,       '',           25),
                     }
 
     if dic_peaks:
@@ -569,10 +710,143 @@ def plot_goes(dic_lines, dic_peaks=None, dic_regions=None, dic_fills=None, title
 
     return figure
 
-"""
-Function to make a quick histogram plot for freq vs classification.
-"""
+
+def plot_static_window_stats(df_data, percentage=False):
+    """
+    A basic plot to show the matched flares, false rejection and acceptaions relative to a reference.
+    The reference data is "usually" HEK flares.
+    """
+    # Plot parameters
+    N = len(df_data.columns)
+    ind = np.arange(N)    # the x locations for the groups
+    width = 0.35
+    dic_colours = {'false acceptance':'C0', 'matched':'C2', 'false rejection': 'C3'}
+    dic_bottoms = {'false acceptance':0.0, 'matched':df_data['false acceptance'].values, 'false rejection': df_data['matched'].values}
+
+
+    # Get the bars
+    lis_bars = []
+    for index, row in df_data.iterrows():
+        bottom = dic_bottoms[index]
+        bar = plt.bar(ind, row.values, width, color=dic_colours.get(index, '#a0a0a0'), label=index, bottom=bottom)
+        lis_bars.append(bar)
+
+
+    plt.ylabel('Scores')
+    plt.title('Scores by group and gender')
+    plt.xticks(ind, list(df_data.columns))
+    #plt.yticks(np.arange(0, 5, 10,15,20))
+    plt.legend()#(p1[0], p2[0]), ('Men', 'Women'))
+
+    plt.show()
+
+def remove_list_duplicates(input):
+    """
+    """
+    lis_out = []
+    for element in input:
+        if element not in lis_out:
+            lis_out.append(element)
+
+    return lis_out
+
+
+def plot_varied_window_stats(df_data, percentage=False, title='Statistical Correlation of Results to HEK Reference', legncol=3):
+    """
+    A basic plot to show the matched flares, false rejection and acceptaions relative to a reference.
+    The reference data is "usually" HEK flares.
+    """
+    # Plot parameters
+    # lis_str_windows = df_data.columns.levels[0] # Doesn't preserve order
+    lis_str_windows = remove_list_duplicates(df_data.columns.get_level_values(0))
+    N_rows = len(df_data)
+    N_windows = len(lis_str_windows)
+    arr_xpos = np.arange(N_rows)    # the x locations for the groups
+    all_width = 0.6
+    win_width = all_width / N_windows
+    #dic_colours = {'false acceptance':'C0', 'matched':'C2', 'false rejection': 'C3'}
+    #dic_bottoms = {'false acceptance':0.0, 'matched':df_data['false acceptance'].values, 'false rejection': df_data['matched'].values}
+
+    figure = plt.figure()
+    #plt.subplots_adjust(hspace=0.5)
+    #axes = figure.add_subplot(111, adjustable='box', frame_on=True, position=position)#plt.gca()
+    #axes = figure.add_subplot(111, adjustable='box')
+    axes = figure.add_subplot(111)
+    plt.subplots_adjust(wspace=0.4)
+    figure.tight_layout()
+
+    # Get the bars
+    # For each window
+    lis_flo_pos_window_labels = []
+    lis_str_labels_windows = []
+    for i in range(0,len(lis_str_windows)):
+        # The reduced DataFrame with just that window
+        str_win_index = lis_str_windows[i]
+        #print('str_win_index: ' + str(str_win_index))
+        df_window = df_data[str_win_index]
+        #print('df_window:\n' + str(df_window))
+
+        # Get the bar values for each metric (try to make it tolerant of heading variations)
+        arr_FA = df_window.get('FA', df_window.get('False Acceptance', df_window.get('false acceptance', df_window.get('False_Acceptance', df_window.get('false_acceptance', df_window.get('fa', 0.0)))))).values
+        arr_M = df_window.get('M', df_window.get('m', df_window.get('matched', df_window.get('Matched', df_window.get('Matches', df_window.get('matches', 0.0)))))).values
+        arr_FR = df_window.get('FR', df_window.get('False Rejection', df_window.get('false rejection', df_window.get('False_Rejection', df_window.get('false_rejection', df_window.get('fr', 0.0)))))).values
+
+        # Add the bars, include labels if they're the
+        if i is 0:
+            bars_FA = axes.bar(arr_xpos+i*win_width, arr_FA, win_width, color='C0', bottom=0.0, label='False Acceptance')
+            bars_M = axes.bar(arr_xpos+i*win_width, arr_M, win_width, color='C2', bottom=arr_FA, label='Matched')
+            bars_FR = axes.bar(arr_xpos+i*win_width, arr_FR, win_width, color='C3', bottom=arr_FA+arr_M, label='False Rejection')
+        else:
+            bars_FA = axes.bar(arr_xpos+i*win_width, arr_FA, win_width, color='C0', bottom=0.0)
+            bars_M = axes.bar(arr_xpos+i*win_width, arr_M, win_width, color='C2', bottom=arr_FA)
+            bars_FR = axes.bar(arr_xpos+i*win_width, arr_FR, win_width, color='C3', bottom=arr_FA+arr_M)
+
+        # Add window label details
+        lis_flo_pos_window_labels = lis_flo_pos_window_labels + list(arr_xpos+i*win_width)
+        lis_str_labels_windows = lis_str_labels_windows + [str_win_index] * (len(arr_xpos) + 1)
+
+
+    # Now go through each row for labels (which has pre-processing, method and parameters)
+    lis_str_labels_windows = []
+    for i in range(0,len(df_data['0s'])):
+        # Get the row
+        row = df_window.iloc[i]
+
+        # Get the text and position for the label
+        str_label = str(row.name).replace('\', \'','; ').replace('\'','').replace('(','').replace(')','')
+        flo_xpos = arr_xpos[i]
+
+        # Add the label
+        plt.text(flo_xpos-0.9*win_width, 0.5, str_label, size=11, rotation=90.,va="bottom", ha="center")
+
+        # Add
+        lis_str_labels_windows = lis_str_labels_windows + lis_str_windows
+
+    axes.set_ylabel('# Of Flares')
+    axes.set_title(title)
+    #plt.ylim = [0,100]
+    #axes.set_ylim([ymin,ymax])
+    ####axes.set_ylim([0,100])
+    ####print('lis_flo_pos_window_labels: ' + str(lis_flo_pos_window_labels))
+    ####print('lis_str_labels_windows: ' + str(lis_str_labels_windows))
+    plt.xticks(sorted(lis_flo_pos_window_labels), lis_str_labels_windows, rotation=90)
+    #plt.yticks(np.arange(0, 5, 10,15,20))
+    ######legend = axes.legend()#(p1[0], p2[0]), ('Men', 'Women'))
+    tup_leg_bbox = (0.5, -0.15)
+    legend = axes.legend(loc=9, bbox_to_anchor=tup_leg_bbox, ncol=legncol, framealpha=1.0)
+    legend.set_zorder(20)
+
+    figure.show()
+
+    return figure
+
+
+
+
 def plot_histogram_v01(data, bins=50, savepath=None, title=None, log=False, xlabel=None, ylabel=None, hist_range=None):
+    """
+    Function to make a quick histogram plot for freq vs classification.
+    """
     if isinstance(data, np.ndarray):
         arr_data = data
     if isinstance(data, pd.Series):
@@ -583,11 +857,11 @@ def plot_histogram_v01(data, bins=50, savepath=None, title=None, log=False, xlab
 
     # Create the histogram of the data
     if not log:
-        n, bins, patches = plt.hist(arr_data, bins, normed=1, facecolor='green', alpha=0.75)
+        n, bins, patches = plt.hist(arr_data, bins, normed=1, facecolor='C2', alpha=0.75)
     else:
         # Note: negitive values are turned positive before logging
-        #n, bins, patches = plt.hist(np.log2(np.absolute(arr_data)), log=True, bins=bins, normed=1, facecolor='red', alpha=0.75)
-        n, bins, patches = plt.hist(np.log2(np.absolute(arr_data))[np.log2(np.absolute(arr_data)) > -1E308], log=True, bins=bins, normed=1, facecolor='red', alpha=0.75, range=hist_range)
+        #n, bins, patches = plt.hist(np.log2(np.absolute(arr_data)), log=True, bins=bins, normed=1, facecolor='C3', alpha=0.75)
+        n, bins, patches = plt.hist(np.log2(np.absolute(arr_data))[np.log2(np.absolute(arr_data)) > -1E308], log=True, bins=bins, normed=1, facecolor='C3', alpha=0.75, range=hist_range)
 
     # Add x and y axis labels
     if xlabel:

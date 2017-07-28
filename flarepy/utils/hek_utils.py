@@ -57,7 +57,28 @@ def hek_results_to_df(hek_results, minimise=True, event_duration=True):
                 df_hek = df_hek.drop(str_col, axis=1)
 
         # And remove some columns manually
-        set_col_remove = set(['obs_dataprepurl', 'obs_firstprocessingdate', 'obs_includesnrt', 'event_clippedspatial', 'event_clippedtemporal', 'event_expires', 'event_importance_num_ratings', 'event_mapurl', 'event_maskurl', 'event_type', 'fl_efoldtimeunit', 'fl_fluenceunit', 'fl_halphaclass', 'fl_peakemunit', 'fl_peakfluxunit', 'fl_peaktempunit', 'obs_lastprocessingdate', 'chaincodetype', 'search_frm_name', 'ar_compactnesscls', 'obs_title', 'bound_chaincode', 'bound_chaincode', 'ar_penumbracls', 'ar_zurichcls', 'area_unit', 'rasterscan', 'rasterscantype', 'ar_penumbracl', 'ar_zurichcls area_unit', 'ar_mcintoshcls', 'ar_mtwilsoncls', 'ar_noaaclass', 'search_instrument', 'search_observatory', 'skel_chaincode'])
+        set_col_remove = set(['frm_paramset',
+                              'frm_specificid',
+                              'gs_galleryid',
+                              'gs_imageurl',
+                              'gs_movieurl',
+                              'gs_thumburl',
+                              'hgc_boundcc',
+                              'hgs_boundcc',
+                              'hpc_boundcc',
+                              'intensunit',
+                              'obs_dataprepurl',
+                              'obs_firstprocessingdate',
+                              'obs_includesnrt',
+                              'event_clippedspatial',
+                              'event_clippedtemporal',
+                              'event_expires',
+                              'event_importance_num_ratings',
+                              'event_mapurl',
+                              'event_maskurl',
+                              'event_type',
+                              'fl_efoldtimeunit',
+                              'fl_fluenceunit', 'fl_halphaclass', 'fl_peakemunit', 'fl_peakfluxunit', 'fl_peaktempunit', 'obs_lastprocessingdate', 'chaincodetype', 'search_frm_name', 'ar_compactnesscls', 'obs_title', 'bound_chaincode', 'bound_chaincode', 'ar_penumbracls', 'ar_zurichcls', 'area_unit', 'rasterscan', 'rasterscantype', 'ar_penumbracl', 'ar_zurichcls area_unit', 'ar_mcintoshcls', 'ar_mtwilsoncls', 'ar_noaaclass', 'search_instrument', 'search_observatory', 'skel_chaincode'])
         set_col_remove = set_col_remove.intersection(set(df_hek.columns))
         for str_col in set_col_remove:
             df_hek = df_hek.drop(str_col, axis=1)
@@ -106,16 +127,25 @@ def get_hek_goes_flares(str_start, str_end, minimise=True, fail_safe=True):
     event_type = 'FL'
     event_observatory = 'GOES'
 
-    # Get the values for a given daterange
-    try:
+    # Use a try/except block if fail_safe is specified
+    if fail_safe:
+        # Get the values for a given daterange
+        try:
+            hek_results = client.query(hek.attrs.Time(str_start,str_end),
+                                   hek.attrs.EventType(event_type),
+                                   hek.attrs.OBS.Observatory == event_observatory)
+
+            # Make a peak time-indexed pandas.DataFrame
+            df_hek = hek_results_to_df(hek_results, minimise=minimise)
+        except:
+            df_hek = pd.DataFrame()
+    else:
         hek_results = client.query(hek.attrs.Time(str_start,str_end),
                                hek.attrs.EventType(event_type),
                                hek.attrs.OBS.Observatory == event_observatory)
 
         # Make a peak time-indexed pandas.DataFrame
         df_hek = hek_results_to_df(hek_results, minimise=minimise)
-    except:
-        df_hek = pd.DataFrame()
 
     # return the DataFrame
     return df_hek

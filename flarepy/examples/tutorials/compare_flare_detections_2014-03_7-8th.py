@@ -18,11 +18,15 @@ from sunpy.time import TimeRange
 
 # Parameters
 # Specify the start/end times
-str_start = '2014-03-07 00:00:00'
-str_mid = '2014-03-08 00:00:00' # Only necessary because only DL GOES for single days
-str_end = '2014-03-09 00:00:00'
+str_start = '2014-03-28 00:00:00'
+str_mid = '2014-03-29 00:00:00' # Only necessary because only DL GOES for single days
+str_end = '2014-03-30 00:00:00'
 
 str_save_path = 'C:\\flare_outputs\\2017-07-18\\'
+str_plots_dir = 'plots\\'
+str_comparisons_dir = 'comparisons\\'
+str_detections_dir = 'detections\\'
+str_file_prefix = '2014_mar_28-29th___'
 
 ############
 #
@@ -156,30 +160,30 @@ df_peaks_4min = det.get_flares_goes_event_list(ser_xrsb_raw_int_60S_box5.interpo
 ############
 
 # Save data
-df_peaks_cwt.to_csv(str_save_path+'2014_mar_7-8th___cwt_peaks_[1-'+str(int_max_width)+'].csv')
-df_peaks_4min.to_csv(str_save_path+'2014_mar_7-8th___4min_peaks.csv')
-df_hek.to_csv(str_save_path+'2014_mar_7-8th___HEK_events.csv')
+df_peaks_cwt.to_csv(str_save_path+str_file_prefix+'cwt_peaks_[1-'+str(int_max_width)+'].csv')
+df_peaks_4min.to_csv(str_save_path+str_file_prefix+'4min_peaks.csv')
+df_hek.to_csv(str_save_path+str_file_prefix+'HEK_events.csv')
 
 # Plot this as a single figure
 fig = utils.plot_goes({'xrsa':ser_xrsa_plt_fil, 'xrsa - raw': ser_xrsa_plt_raw, 'xrsb': ser_xrsb_plt_fil, 'xrsb - raw': ser_xrsb_plt_raw},
               {'CWT': df_peaks_cwt['fl_peakflux'], 'HEK': ser_hek_peaks, '4-min Rise': df_peaks_4min['fl_peakflux']},
-              title='7-8th March 2014 - GOES XRS Data',#title='2 X-Class Flares in March 2012 - GOES XRS Data (CWT: 1 to ' + str(int_max_width) + ' for ' + str(len(df_peaks_cwt['xrsb'])) + ' peaks)',
+              title='28-29th March 2014 - GOES XRS Data',#title='2 X-Class Flares in March 2012 - GOES XRS Data (CWT: 1 to ' + str(int_max_width) + ' for ' + str(len(df_peaks_cwt['xrsb'])) + ' peaks)',
               ylim=(1e-9, 1e-3))
-fig.savefig(str_save_path+'2014_mar_7-8th_cwt_[1-'+str(int_max_width)+'].png', dpi=900, bbox_inches='tight')
+fig.savefig(str_save_path+'2014_mar_28-29th_cwt_[1-'+str(int_max_width)+'].png', dpi=900, bbox_inches='tight')
 
 # Now a figure per day
 # July 5th
 fig = utils.plot_goes({'xrsa':ser_xrsa_plt_fil.truncate(str_start, str_mid), 'xrsa - raw': ser_xrsa_plt_raw.truncate(str_start, str_mid), 'xrsb': ser_xrsb_plt_fil.truncate(str_start, str_mid), 'xrsb - raw': ser_xrsb_plt_raw.truncate(str_start, str_mid)},
               {'CWT': df_peaks_cwt['fl_peakflux'].truncate(str_start, str_mid), 'HEK': ser_hek_peaks.truncate(str_start, str_mid), '4-min Rise': df_peaks_4min['fl_peakflux'].truncate(str_start, str_mid)},
-              title='7th March 2014 - GOES XRS Data',#title='2 X-Class Flares in March 2012 - GOES XRS Data (CWT: 1 to ' + str(int_max_width) + ' for ' + str(len(df_peaks_cwt['xrsb'])) + ' peaks)',
+              title='28th March 2014 - GOES XRS Data',#title='2 X-Class Flares in March 2012 - GOES XRS Data (CWT: 1 to ' + str(int_max_width) + ' for ' + str(len(df_peaks_cwt['xrsb'])) + ' peaks)',
               ylim=(1e-9, 1e-3))
-fig.savefig(str_save_path+'2014_mar_7th_cwt_[1-'+str(int_max_width)+'].png', dpi=900, bbox_inches='tight')
+fig.savefig(str_save_path+'2014_mar_28th_cwt_[1-'+str(int_max_width)+'].png', dpi=900, bbox_inches='tight')
 fig = utils.plot_goes({'xrsa':ser_xrsa_plt_fil.truncate(str_mid, str_end), 'xrsa - raw': ser_xrsa_plt_raw.truncate(str_mid, str_end), 'xrsb': ser_xrsb_plt_fil.truncate(str_mid, str_end), 'xrsb - raw': ser_xrsb_plt_raw.truncate(str_mid, str_end)},
               {'CWT':df_peaks_cwt['fl_peakflux'].truncate(str_mid, str_end), 'HEK': ser_hek_peaks.truncate(str_mid, str_end), '4-min Rise': df_peaks_4min['fl_peakflux'].truncate(str_mid, str_end)},
-              title='8th March 2014 - GOES XRS Data',#title='2 X-Class Flares in March 2012 - GOES XRS Data (CWT: 1 to ' + str(int_max_width) + ' for ' + str(len(df_peaks_cwt['xrsb'])) + ' peaks)',
+              title='29th March 2014 - GOES XRS Data',#title='2 X-Class Flares in March 2012 - GOES XRS Data (CWT: 1 to ' + str(int_max_width) + ' for ' + str(len(df_peaks_cwt['xrsb'])) + ' peaks)',
               ylim=(1e-9, 1e-3))
-fig.savefig(str_save_path+'2014_mar_8th_cwt_[1-'+str(int_max_width)+'].png', dpi=900, bbox_inches='tight')
+fig.savefig(str_save_path+'2014_mar_29th_cwt_[1-'+str(int_max_width)+'].png', dpi=900, bbox_inches='tight')
 
 windows = [timedelta(minutes=1), timedelta(minutes=2), timedelta(minutes=3)]
 df_matched, df_unmatched = utils.get_equiv_hek_results(df_peaks_cwt, hek_data=df_hek, windows=windows)
-df_matched.to_csv(str_save_path+'2014_mar_7-8th_cwt_peaks_[1-'+str(int_max_width)+']_matched_to_hek.csv')
+df_matched.to_csv(str_save_path+'2014_mar_28-29th_cwt_peaks_[1-'+str(int_max_width)+']_matched_to_hek.csv')

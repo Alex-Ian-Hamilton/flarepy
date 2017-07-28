@@ -15,21 +15,21 @@ def intensity_to_flare_class(arr_intensity, str_output_type='full', int_dp=0):
 
     Parameters
     ----------
-    arr_intensity: arr
+    arr_intensity : array
         The float or array of intensity values to find the classification of.
 
-    str_output_type: str
+    str_output_type : `str`
         A string to decide the output necessary.
         'full' = the character and number
         'number' = just the number
         'character' = just the character
 
-    int_dp: arr
+    int_dp : `int`
         The dataset to look for maxima in.
 
     Returns
     -------
-    result: array
+    result : array
         The list of indices for local maxima.
     """
 
@@ -91,21 +91,21 @@ def flo_to_cla(flo_intensity, str_output_type='full', int_dp=0):
 
     Parameters
     ----------
-    arr_intensity: arr
+    flo_intensity : `float`
         The float or array of intensity values to find the classification of.
 
-    str_output_type: str
+    str_output_type : `str`
         A string to decide the output necessary.
         'full' = the character and number
         'number' = just the number
         'character' = just the character
 
-    int_dp: arr
+    int_dp : `int`
         The dataset to look for maxima in.
 
     Returns
     -------
-    result: array
+    result : array
         The list of indices for local maxima.
     """
 
@@ -146,21 +146,21 @@ def arr_to_cla(arr_intensity, str_output_type='full', int_dp=0):
 
     Parameters
     ----------
-    arr_intensity: arr
+    arr_intensity : arr
         The float or array of intensity values to find the classification of.
 
-    str_output_type: str
+    str_output_type : `str`
         A string to decide the output necessary.
         'full' = the character and number
         'number' = just the number
         'character' = just the character
 
-    int_dp: arr
+    int_dp : `int`
         The dataset to look for maxima in.
 
     Returns
     -------
-    result: array
+    result : array
         The list of indices for local maxima.
     """
     lis_results = []
@@ -178,12 +178,12 @@ def flare_class_to_intensity(arr_flare_class):
 
     Parameters
     ----------
-    arr_flare_class: array str
+    arr_flare_class : array str
         #####
 
     Returns
     -------
-    result: array float
+    result : array float
         ####
     """
     # Flare classification ranges
