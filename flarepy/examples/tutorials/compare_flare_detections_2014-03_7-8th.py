@@ -9,6 +9,7 @@ Created on Thu Jun 29 12:53:17 2017
 import pandas as pd
 import numpy as np
 from datetime import timedelta
+import os.path
 
 # Advanced imports
 import flarepy.utils as utils
@@ -22,7 +23,7 @@ str_start = '2014-03-28 00:00:00'
 str_mid = '2014-03-29 00:00:00' # Only necessary because only DL GOES for single days
 str_end = '2014-03-30 00:00:00'
 
-str_save_path = 'C:\\flare_outputs\\2017-07-18\\'
+str_save_path = 'D:\\flare_outputs\\2017-07-28\\'
 str_plots_dir = 'plots\\'
 str_comparisons_dir = 'comparisons\\'
 str_detections_dir = 'detections\\'
@@ -35,7 +36,7 @@ str_file_prefix = '2014_mar_28-29th___'
 ############
 
 # Get and open GOES data
-h5 = pd.HDFStore('C:\\goes_h5\\2012_goes.h5')
+#h5 = pd.HDFStore('C:\\goes_h5\\2012_goes.h5')
 
 lc_goes_5th = GOESLightCurve.create(TimeRange(str_start, str_mid))
 lc_goes_6th = GOESLightCurve.create(TimeRange(str_mid, str_end))
@@ -108,11 +109,22 @@ ser_xrsb_plt_raw.iloc[np.where(ser_xrsb_raw_mask != 0.0)] = np.nan
 #
 ############
 
+# Check if the file is already present
+if os.path.isfile(str_save_path+str_detections_dir+str_file_prefix+'_hek.csv'):
+    # Simply open the file
+    df_hek = pd.read_csv(str_save_path+str_detections_dir+str_file_prefix+'_hek.csv')
+else:
+    # Download
+    df_hek = utils.get_hek_goes_flares(str_start, str_end, fail_safe=False)
+    arr_hek_peaks = utils.flare_class_to_intensity(df_hek['fl_goescls'].values)
+    ser_hek_peaks = pd.Series(data=arr_hek_peaks,index=df_hek.index)
+    df_hek.to_csv(str_save_path+str_detections_dir+str_file_prefix+'_hek.csv')
+"""
 df_hek = utils.get_hek_goes_flares(str_start, str_end, fail_safe=True, minimise=True)
 arr_hek_peaks = utils.flare_class_to_intensity(df_hek['fl_goescls'].values)
 ser_hek_peaks = pd.Series(data=arr_hek_peaks,index=df_hek.index)
 ser_hek_peaks.to_csv(str_save_path+'2012_july_5-6th_hek.csv')
-
+"""
 
 ############
 #

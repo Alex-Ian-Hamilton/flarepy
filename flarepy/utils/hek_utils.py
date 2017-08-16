@@ -8,6 +8,7 @@ import pandas as pd
 from sunpy.net import hek
 import numpy as np
 from datetime import timedelta
+from flarepy.utils import flare_class_to_intensity
 
 
 def hek_results_to_df(hek_results, minimise=True, event_duration=True):
@@ -90,7 +91,7 @@ def hek_results_to_df(hek_results, minimise=True, event_duration=True):
     return df_hek
 
 
-def get_hek_goes_flares(str_start, str_end, minimise=True, fail_safe=True):
+def get_hek_goes_flares(str_start, str_end, minimise=True, add_peaks=True, fail_safe=True):
     """
     A wrapper for SunPy's HEK lookup, to make it quicker to get the relivant
     data in a useful form. (peak time indexed pandas DataFrame)
@@ -147,6 +148,10 @@ def get_hek_goes_flares(str_start, str_end, minimise=True, fail_safe=True):
         # Make a peak time-indexed pandas.DataFrame
         df_hek = hek_results_to_df(hek_results, minimise=minimise)
 
+    # Add peak flux value, as infered from flare classification, if requested
+    if add_peaks:
+        df_hek['fl_peakflux'] = flare_class_to_intensity(df_hek['fl_goescls'].values)
+    
     # return the DataFrame
     return df_hek
 

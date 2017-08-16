@@ -8,3 +8,4 @@ from flarepy.utils.hek_utils import *
 from flarepy.utils.flare_energy_utils import *
 from flarepy.utils.flare_start_end_utils import *
 from flarepy.utils.comparison_utils import *
+from flarepy.utils.pre_processing import *

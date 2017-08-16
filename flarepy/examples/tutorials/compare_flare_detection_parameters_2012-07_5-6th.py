@@ -125,19 +125,23 @@ ser_minima = ser_xrsb_raw_int_60S_box5[utils.find_minima_fast(ser_xrsb_raw_int_6
 # Now use boxcart method
 # CWT parameters
 int_max_width = 50 # Could use int_max_width = 50 to increase sensitivity
-arr_cwt_widths = np.arange(1,int_max_width)
-
-# Get the peaks
-df_peaks_cwt = det.get_flare_peaks_cwt(ser_xrsb_raw_int_60S_box5.interpolate(), raw_data=ser_xrsb_raw_int_60S.interpolate(), widths=arr_cwt_widths, get_energies=True)
-
-# Save
-df_peaks_cwt.to_csv(str_save_path+str_detections_dir+str_file_prefix+'CWT_detections.csv', header=True)
-
-# Get estimated flare start/end times (use closest local minima)
+lis_arr_cwt_widths = [ np.arange(1,10), np.arange(1,20), np.arange(1,30), np.arange(1,40), np.arange(1,50), np.arange(1,60), np.arange(1,70), np.arange(1,80), np.arange(1,90), np.arange(1,100) ]
+lis_arr_cwt_widths = [ np.arange(1,20), np.arange(1,40), np.arange(1,60), np.arange(1,80), np.arange(1,100) ]
 
 
-# Get the flare energies
+dic_cwt_peaks = {}
 
+for arr_cwt_widths in lis_arr_cwt_widths:
+    # Get the peaks
+    df_peaks_cwt = det.get_flare_peaks_cwt(ser_xrsb_raw_int_60S_box5.interpolate(), raw_data=ser_xrsb_raw_int_60S.interpolate(), widths=arr_cwt_widths, get_energies=True)
+
+    # Save
+    str_widths = '['+str(arr_cwt_widths[0])+','+str(arr_cwt_widths[1])+', ... ,'+str(arr_cwt_widths[-1])+']'
+    df_peaks_cwt.to_csv(str_save_path+str_detections_dir+str_file_prefix+'CWT_detections_width-'+str_widths+'.csv', header=True)
+    
+    # Add to dictionary of the CWT peaks
+    dic_cwt_peaks['bin=60s;CWT;Widths='+str_widths] = df_peaks_cwt
+    
 
 ############
 #
@@ -160,14 +164,7 @@ df_peaks_4min.to_csv(str_save_path+str_detections_dir+str_file_prefix+'4min_rise
 # Allow matches if within 3 mins, split into 3 windows to prioritise closer matches
 lis_windows = [timedelta(minutes=1), timedelta(minutes=2), timedelta(minutes=3)]
 
-# Get the basic matches
-#df_cwt_matched_hek, ser_in_hek_not_in_cwt, ser_in_cwt_not_in_hek = utils.compare_to_primary(df_hek, df_peaks_cwt, windows=lis_windows)
-#df_cwt_matched_hek.to_csv(str_save_path+str_file_prefix+'temp1.csv')
-#ser_in_hek_not_in_cwt.to_csv(str_save_path+str_file_prefix+'temp2.csv')
-#ser_in_cwt_not_in_hek.to_csv(str_save_path+str_file_prefix+'temp3.csv')
-#df_4min_matched_hek, ser_in_hek_not_in_4min, ser_in_4min_not_in_hek = utils.compare_to_primary(df_hek, df_peaks_4min.groupby(df_peaks_4min.index).last(), windows=lis_windows)
-#df_4min_matched_hek.rename("HEK peaktime").to_csv(str_save_path+str_file_prefix+'temp4.csv', header=True, index_label='4 min peaktime')
-
+"""
 # Get the detailed match details
 df_cwt_compared_to_hek, ser_in_cwt_not_in_hek, ser_in_hek_not_in_cwt = utils.compare_to_HEK(df_hek, df_peaks_cwt, windows=lis_windows)
 df_4min_compared_to_hek, ser_in_4min_not_in_hek, ser_in_hek_not_in_4min = utils.compare_to_HEK(df_hek, df_peaks_4min.groupby(df_peaks_4min.index).last(), windows=lis_windows)
@@ -180,17 +177,18 @@ ser_in_hek_not_in_cwt.rename("N/A").to_csv(str_save_path+str_comparisons_dir+str
 ser_in_hek_not_in_4min.rename("N/A").to_csv(str_save_path+str_comparisons_dir+str_file_prefix+'HEK_flares_not_in_4min_detections.csv', header=True, index_label='HEK peaktime')
 ser_in_cwt_not_in_hek.rename("N/A").to_csv(str_save_path+str_comparisons_dir+str_file_prefix+'CWT_detections_not_in_HEK.csv', header=True, index_label='CWT peaktime')
 ser_in_4min_not_in_hek.rename("N/A").to_csv(str_save_path+str_comparisons_dir+str_file_prefix+'4min_detections_not_in_HEK.csv', header=True, index_label='4 min peaktime')
+"""
 
 # The statistsics for all windows
 dic_results = { 'bin=60s;HEK - Reference;': ser_hek_peaks,
-                'bin=60s;4 min;N=4': df_peaks_4min['fl_peakflux'],
-                'bin=60s;CWT;Widths=[1,...,49]': df_peaks_cwt}#['fl_peakflux'] }
+                'bin=60s;4 min;N=4': df_peaks_4min['fl_peakflux']}
+dic_results.update(dic_cwt_peaks)
 df_varied_windows_stats = utils.get_varied_window_stats(ser_hek_peaks, dic_results, windows=lis_windows)
 df_varied_windows_stats.to_csv(str_save_path+str_comparisons_dir+str_file_prefix+'varied_windows_statistsics.csv', header=True)
 fig_stats = plot.plot_varied_window_stats(df_varied_windows_stats, percentage=False)
-fig_stats.savefig(str_save_path+str_plots_dir+str_file_prefix+'varied_windows_statistsics.png', dpi=900, bbox_inches='tight')
+fig_stats.savefig(str_save_path+str_plots_dir+str_file_prefix+'varied_windows_statistsics_for_different_cwt_widths.png', dpi=900, bbox_inches='tight')
 
-
+"""
 ############
 #
 #   Plot
@@ -220,3 +218,4 @@ fig.savefig(str_save_path+str_plots_dir+str_day_2_prefix+'cwt_[1-'+str(int_max_w
 windows = [timedelta(minutes=1), timedelta(minutes=2), timedelta(minutes=3)]
 #df_matched, df_unmatched = utils.get_equiv_hek_results(df_peaks_cwt, hek_data=df_hek, windows=windows)
 #df_matched.to_csv(str_save_path+str_plots_dir+'2012_july_5-6th_cwt_peaks_[1-'+str(int_max_width)+']_matched_to_hek.csv')
+"""
