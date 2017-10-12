@@ -11,6 +11,7 @@ import numpy as np
 from datetime import timedelta
 import os.path
 import astropy.units as u
+import datetime
 
 # Advanced imports
 import flarepy.utils as utils
@@ -25,12 +26,13 @@ str_start = '2014-03-28 00:00:00'
 str_mid = '2014-03-29 00:00:00' # Only necessary because only DL GOES for single days
 str_end = '2014-03-30 00:00:00'
 
-str_save_path = 'D:\\flare_outputs\\2017-08-16\\'
-str_plots_dir = 'plots\\'
-str_miniplots_dir = 'miniplots\\'
+str_save_path = 'D:\\flare_outputs\\'+datetime.datetime.now().strftime("%Y-%m-%d")+'\\'
+str_plots_dir = 'plots_other\\'
 str_comparisons_dir = 'comparisons\\'
 str_detections_dir = 'detections\\'
-str_file_prefix = '2014_mar_28-29th___'
+str_miniplots_dir = 'plots_peaks\\'
+str_dayplots_dir = 'plots_days\\'
+
 
 str_file_prefix = '2014_mar_28-29th___'
 str_day_1_prefix = '2014_mar_28th___'
@@ -38,6 +40,17 @@ str_day_2_prefix = '2014_mar_29th___'
 str_heading = '28-29th mar 2014'
 str_day_1_heading = '28th mar 2014'
 str_day_2_heading = '29th mar 2014'
+
+# Create any folders necessary
+lis_str_folders = [str_save_path,
+                   str_save_path+str_plots_dir,
+                   str_save_path+str_comparisons_dir,
+                   str_save_path+str_detections_dir,
+                   str_save_path+str_miniplots_dir,
+                   str_save_path+str_dayplots_dir]
+for str_folder in lis_str_folders:
+    if not os.path.exists(str_folder):
+        os.makedirs(str_folder)
 
 ############
 #
@@ -231,6 +244,6 @@ lis_minifigs = plot.plot_goes_miniplots({'xrsa':ser_xrsa_plt_fil, 'xrsa - raw': 
               {'CWT': df_peaks_cwt['fl_peakflux'], 'HEK': ser_hek_peaks, '4-min Rise': df_peaks_4min['fl_peakflux']},
               title=str_heading+' - GOES XRS Data',
               ylim=(1e-9, 1e-3),
-              miniplot_peaks=ser_hek_peaks,
+              miniplot_peaks=ser_hek_peaks[0:1],
               miniplot_windows=timedelta(hours=1),
               miniplot_save_loc=str_save_path+str_miniplots_dir)

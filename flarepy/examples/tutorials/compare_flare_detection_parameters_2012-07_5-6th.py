@@ -126,7 +126,7 @@ ser_minima = ser_xrsb_raw_int_60S_box5[utils.find_minima_fast(ser_xrsb_raw_int_6
 # CWT parameters
 int_max_width = 50 # Could use int_max_width = 50 to increase sensitivity
 lis_arr_cwt_widths = [ np.arange(1,10), np.arange(1,20), np.arange(1,30), np.arange(1,40), np.arange(1,50), np.arange(1,60), np.arange(1,70), np.arange(1,80), np.arange(1,90), np.arange(1,100) ]
-lis_arr_cwt_widths = [ np.arange(1,20), np.arange(1,40), np.arange(1,60), np.arange(1,80), np.arange(1,100) ]
+lis_arr_cwt_widths = [ np.arange(1,30)]#, np.arange(1,40), np.arange(1,50), np.arange(1,60), np.arange(1,70) ]
 
 
 dic_cwt_peaks = {}
@@ -186,7 +186,7 @@ dic_results.update(dic_cwt_peaks)
 df_varied_windows_stats = utils.get_varied_window_stats(ser_hek_peaks, dic_results, windows=lis_windows)
 df_varied_windows_stats.to_csv(str_save_path+str_comparisons_dir+str_file_prefix+'varied_windows_statistsics.csv', header=True)
 fig_stats = plot.plot_varied_window_stats(df_varied_windows_stats, percentage=False)
-fig_stats.savefig(str_save_path+str_plots_dir+str_file_prefix+'varied_windows_statistsics_for_different_cwt_widths.png', dpi=900, bbox_inches='tight')
+fig_stats.savefig(str_save_path+str_plots_dir+str_file_prefix+'varied_windows_statistsics_for_different_cwt_widths_narrow.png', dpi=900, bbox_inches='tight')
 
 """
 ############

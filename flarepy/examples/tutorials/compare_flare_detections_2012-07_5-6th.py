@@ -193,8 +193,12 @@ fig_stats.savefig(str_save_path+str_plots_dir+str_file_prefix+'varied_windows_st
 
 ############
 #
-#   Plot
+#   Plots
 #
+############
+
+############
+#   GOES XRS Plots with peaks
 ############
 
 # Plot this as a single figure
@@ -217,6 +221,15 @@ fig = plot.plot_goes({'xrsa':ser_xrsa_plt_fil.truncate(str_mid, str_end), 'xrsa 
               ylim=(1e-9, 1e-3))
 fig.savefig(str_save_path+str_plots_dir+str_day_2_prefix+'cwt_[1-'+str(int_max_width)+'].png', dpi=900, bbox_inches='tight')
 
-windows = [timedelta(minutes=1), timedelta(minutes=2), timedelta(minutes=3)]
+#windows = [timedelta(minutes=1), timedelta(minutes=2), timedelta(minutes=3)]
 #df_matched, df_unmatched = utils.get_equiv_hek_results(df_peaks_cwt, hek_data=df_hek, windows=windows)
 #df_matched.to_csv(str_save_path+str_plots_dir+'2012_july_5-6th_cwt_peaks_[1-'+str(int_max_width)+']_matched_to_hek.csv')
+
+############
+#   Histogram Plots
+############
+
+#fig = plot.plot_histogram_v01(df_peaks_cwt['fl_peakflux'].values, savepath=str_save_path+str_plots_dir+str_file_prefix+'cwt_energy_distribution.png')
+fig = plot.plot_histogram_v02(df_peaks_cwt['fl_peakflux'].values, savepath=str_save_path+str_plots_dir+str_file_prefix+'cwt_energy_distribution.png', bins=20)
+
+
