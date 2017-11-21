@@ -549,6 +549,7 @@ def plot_goes_miniplots(dic_lines, dic_peaks=None, dic_fills=None, title="GOES X
     fig : `list` of `~matplotlib.Figure`
         A list of the miniplot figures.
     """
+    print('plot_goes_miniplots 00')
     # Sanitize inputs
     if miniplot_peaks is None:
         raise ValueError('Need to specify peak locations for miniplots.')
@@ -632,7 +633,7 @@ def plot_goes_miniplots(dic_lines, dic_peaks=None, dic_fills=None, title="GOES X
     return lis_figs
 
 
-def plot_goes(dic_lines, dic_peaks=None, dic_fills=None, title="GOES Xray Flux", ylim=(1e-10, 1e-2), xlabel=None, textlabels=None, legncol=3):
+def plot_goes(dic_lines, dic_peaks=None, dic_fills=None, title="GOES Xray Flux", ylim=(1e-10, 1e-2), xlabel=None, textlabels=None, showleg=True, legncol=3):
     """Plots GOES XRS light curve in the usual manner.
     The basic template was taken from the sunpy.timeseries.XRSTimeSeries class.
     It now additionally adds the ability to add an arbitrary number of lines and sets of marks.
@@ -674,6 +675,9 @@ def plot_goes(dic_lines, dic_peaks=None, dic_fills=None, title="GOES Xray Flux",
     textlabels : `list` (None)
         A list of text labels, giving the x pos [i][0], y pos [i][1], text [i][2]
         and fontsize [i][3].
+
+    showleg : `bool` (True)
+        Manually control if the legend is shown.
 
     legncol : `int` (3)
         Manually change the number of columns used for the legend.
@@ -896,14 +900,14 @@ def plot_goes(dic_lines, dic_peaks=None, dic_fills=None, title="GOES Xray Flux",
     ####################
     # Setup Legend
     ####################
-    """
-    # Make legend and position diff if x-axis label given
-    tup_leg_bbox = (0.5, -0.15)
-    if xlabel:
-        tup_leg_bbox = (0.5, -0.2)
-    legend = axes.legend(loc=9, bbox_to_anchor=tup_leg_bbox, ncol=legncol, framealpha=1.0)
-    legend.set_zorder(20)
-    """
+    if showleg:
+        # Make legend and position diff if x-axis label given
+        tup_leg_bbox = (0.5, -0.15)
+        if xlabel:
+            tup_leg_bbox = (0.5, -0.2)
+        legend = axes.legend(loc=9, bbox_to_anchor=tup_leg_bbox, ncol=legncol, framealpha=1.0)
+        legend.set_zorder(20)
+
 
     ####################
     # X-axes
@@ -1317,6 +1321,7 @@ def plot_histogram_v02(data, bins=50, savepath=None, title=None, log=False, xlab
         #n, bins, patches = plt.hist(np.log2(np.absolute(arr_data)), log=True, bins=bins, normed=1, facecolor='C3', alpha=0.75)
         n, bins, patches = plt.hist(np.log2(np.absolute(arr_data))[np.log2(np.absolute(arr_data)) > -1E308], log=True, bins=bins, normed=1, facecolor='C3', alpha=0.75, range=hist_range)
 
+    """
     # Add x and y axis labels
     if xlabel:
         plt.xlabel(xlabel)
@@ -1330,7 +1335,7 @@ def plot_histogram_v02(data, bins=50, savepath=None, title=None, log=False, xlab
     # Add title if specified
     if title:
         plt.title(title)
-
+    """
     # Final style tweaks
     plt.grid(True)
     """

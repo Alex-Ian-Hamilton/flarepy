@@ -10,3 +10,4 @@ from flarepy.utils.flare_start_end_utils import *
 from flarepy.utils.comparison_utils import *
 from flarepy.utils.pre_processing import *
 from flarepy.utils.goes_utils import *
+from flarepy.utils.database_utils import *

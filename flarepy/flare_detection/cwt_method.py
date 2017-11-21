@@ -19,7 +19,7 @@ import flarepy.utils as utils
 def get_flare_peaks_cwt(ser_data, widths=np.arange(1,100), raw_data=None, ser_minima=None, get_duration=True, get_energies=True):
     """
     Implment SciPy CWT to find peaks in the given data.
-    Note: input data is expected to be pre-processed (generally resamples and averaged).
+    Note: input data is expected to be pre-processed (generally resampled and averaged).
 
     Parameters
     ----------

@@ -10,6 +10,7 @@ import pandas as pd
 import numpy as np
 from datetime import timedelta
 import os.path
+import datetime
 
 # Advanced imports
 import flarepy.plotting as plotting
@@ -24,11 +25,27 @@ str_start = '2014-03-28 00:00:00'
 str_mid = '2014-03-29 00:00:00' # Only necessary because only DL GOES for single days
 str_end = '2014-03-30 00:00:00'
 
-str_save_path = 'D:\\flare_outputs\\2017-07-28\\'
-str_plots_dir = 'plots\\'
-str_comparisons_dir = 'comparisons\\'
-str_detections_dir = 'detections\\'
+str_save_path = os.path.join('D:\\','flare_outputs',datetime.datetime.now().strftime("%Y-%m-%d"))
+str_plots_dir = os.path.join(str_save_path, 'plots_other')
+str_comparisons_dir = os.path.join(str_save_path, 'comparisons')
+str_detections_dir = os.path.join(str_save_path, 'detections')
+
 str_file_prefix = '2014_mar_28-29th___'
+
+############
+#
+#   Making the folders
+#
+############
+
+if not os.path.exists(str_save_path):
+    os.makedirs(str_save_path)
+if not os.path.exists(str_plots_dir):
+    os.makedirs(str_plots_dir)
+if not os.path.exists(str_comparisons_dir):
+    os.makedirs(str_comparisons_dir)
+if not os.path.exists(str_detections_dir):
+    os.makedirs(str_detections_dir)
 
 ############
 #
@@ -111,20 +128,20 @@ ser_xrsb_plt_raw.iloc[np.where(ser_xrsb_raw_mask != 0.0)] = np.nan
 ############
 
 # Check if the file is already present
-if os.path.isfile(str_save_path+str_detections_dir+str_file_prefix+'_hek.csv'):
+if os.path.isfile(os.path.join(str_detections_dir,str_file_prefix+'_hek.csv')):
     # Simply open the file
-    df_hek = pd.read_csv(str_save_path+str_detections_dir+str_file_prefix+'_hek.csv')
+    df_hek = pd.read_csv(os.path.join(str_detections_dir,str_file_prefix+'_hek.csv'))
 else:
     # Download
     df_hek = utils.get_hek_goes_flares(str_start, str_end, fail_safe=False)
     arr_hek_peaks = utils.flare_class_to_intensity(df_hek['fl_goescls'].values)
     ser_hek_peaks = pd.Series(data=arr_hek_peaks,index=df_hek.index)
-    df_hek.to_csv(str_save_path+str_detections_dir+str_file_prefix+'_hek.csv')
+    df_hek.to_csv(os.path.join(str_detections_dir,str_file_prefix+'_hek.csv'))
 """
 df_hek = utils.get_hek_goes_flares(str_start, str_end, fail_safe=True, minimise=True)
 arr_hek_peaks = utils.flare_class_to_intensity(df_hek['fl_goescls'].values)
 ser_hek_peaks = pd.Series(data=arr_hek_peaks,index=df_hek.index)
-ser_hek_peaks.to_csv(str_save_path+'2012_july_5-6th_hek.csv')
+ser_hek_peaks.to_csv(os.path.join(str_save_path,'2012_july_5-6th_hek.csv'))
 """
 
 ############
@@ -173,16 +190,16 @@ df_peaks_4min = det.get_flares_goes_event_list(ser_xrsb_raw_int_60S_box5.interpo
 ############
 
 # Save data
-df_peaks_cwt.to_csv(str_save_path+str_file_prefix+'cwt_peaks_[1-'+str(int_max_width)+'].csv')
-df_peaks_4min.to_csv(str_save_path+str_file_prefix+'4min_peaks.csv')
-df_hek.to_csv(str_save_path+str_file_prefix+'HEK_events.csv')
+df_peaks_cwt.to_csv(os.path.join(str_detections_dir,str_file_prefix+'cwt_peaks_[1-'+str(int_max_width)+'].csv'))
+df_peaks_4min.to_csv(os.path.join(str_detections_dir,str_file_prefix+'4min_peaks.csv'))
+df_hek.to_csv(os.path.join(str_detections_dir,str_file_prefix+'HEK_events.csv'))
 
 # Plot this as a single figure
 fig = plotting.plot_goes({'xrsa':ser_xrsa_plt_fil, 'xrsa - raw': ser_xrsa_plt_raw, 'xrsb': ser_xrsb_plt_fil, 'xrsb - raw': ser_xrsb_plt_raw},
               {'CWT': df_peaks_cwt['fl_peakflux'], 'HEK': ser_hek_peaks, '4-min Rise': df_peaks_4min['fl_peakflux']},
               title='28-29th March 2014 - GOES XRS Data',#title='2 X-Class Flares in March 2012 - GOES XRS Data (CWT: 1 to ' + str(int_max_width) + ' for ' + str(len(df_peaks_cwt['xrsb'])) + ' peaks)',
               ylim=(1e-9, 1e-3))
-fig.savefig(str_save_path+'2014_mar_28-29th_cwt_[1-'+str(int_max_width)+'].png', dpi=900, bbox_inches='tight')
+fig.savefig(os.path.join(str_plots_dir,'2014_mar_28-29th_cwt_[1-'+str(int_max_width)+'].png'), dpi=900, bbox_inches='tight')
 
 # Now a figure per day
 # July 5th
@@ -190,13 +207,13 @@ fig = plotting.plot_goes({'xrsa':ser_xrsa_plt_fil.truncate(str_start, str_mid), 
               {'CWT': df_peaks_cwt['fl_peakflux'].truncate(str_start, str_mid), 'HEK': ser_hek_peaks.truncate(str_start, str_mid), '4-min Rise': df_peaks_4min['fl_peakflux'].truncate(str_start, str_mid)},
               title='28th March 2014 - GOES XRS Data',#title='2 X-Class Flares in March 2012 - GOES XRS Data (CWT: 1 to ' + str(int_max_width) + ' for ' + str(len(df_peaks_cwt['xrsb'])) + ' peaks)',
               ylim=(1e-9, 1e-3))
-fig.savefig(str_save_path+'2014_mar_28th_cwt_[1-'+str(int_max_width)+'].png', dpi=900, bbox_inches='tight')
+fig.savefig(os.path.join(str_plots_dir,'2014_mar_28th_cwt_[1-'+str(int_max_width)+'].png'), dpi=900, bbox_inches='tight')
 fig = plotting.plot_goes({'xrsa':ser_xrsa_plt_fil.truncate(str_mid, str_end), 'xrsa - raw': ser_xrsa_plt_raw.truncate(str_mid, str_end), 'xrsb': ser_xrsb_plt_fil.truncate(str_mid, str_end), 'xrsb - raw': ser_xrsb_plt_raw.truncate(str_mid, str_end)},
               {'CWT':df_peaks_cwt['fl_peakflux'].truncate(str_mid, str_end), 'HEK': ser_hek_peaks.truncate(str_mid, str_end), '4-min Rise': df_peaks_4min['fl_peakflux'].truncate(str_mid, str_end)},
               title='29th March 2014 - GOES XRS Data',#title='2 X-Class Flares in March 2012 - GOES XRS Data (CWT: 1 to ' + str(int_max_width) + ' for ' + str(len(df_peaks_cwt['xrsb'])) + ' peaks)',
               ylim=(1e-9, 1e-3))
-fig.savefig(str_save_path+'2014_mar_29th_cwt_[1-'+str(int_max_width)+'].png', dpi=900, bbox_inches='tight')
+fig.savefig(os.path.join(str_plots_dir,'2014_mar_29th_cwt_[1-'+str(int_max_width)+'].png'), dpi=900, bbox_inches='tight')
 
 windows = [timedelta(minutes=1), timedelta(minutes=2), timedelta(minutes=3)]
 df_matched, df_unmatched = utils.get_equiv_hek_results(df_peaks_cwt, hek_data=df_hek, windows=windows)
-df_matched.to_csv(str_save_path+'2014_mar_28-29th_cwt_peaks_[1-'+str(int_max_width)+']_matched_to_hek.csv')
+df_matched.to_csv(os.path.join(str_comparisons_dir,'2014_mar_28-29th_cwt_peaks_[1-'+str(int_max_width)+']_matched_to_hek.csv'))

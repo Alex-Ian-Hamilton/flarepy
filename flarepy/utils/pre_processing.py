@@ -57,7 +57,7 @@ def pre_process(data, resample_bins=60*u.s, resample_method='median', average_me
     # Make a mask for all the NaN and zero values in the original dataset
     ser_raw_mask = pd.Series(data=np.logical_or(np.isnan(data.values), data.values == 0.0), index=data.index)
 
-    # Interpolate for all NaN and zero values in the original dataset (wil be removed later)
+    # Interpolate for all NaN and zero values in the original dataset (will be removed later)
     ser_raw_int = data.replace({0.0:np.nan}).interpolate()
 
     # Resample/Rebin
