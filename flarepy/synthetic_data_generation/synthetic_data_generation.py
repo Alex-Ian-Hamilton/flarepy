@@ -10,6 +10,7 @@ import pandas as pd
 #from sunpy.time import TimeRange
 from datetime import timedelta, datetime
 #import flarepy.utils as utils
+from scipy import signal
 
 """
     Create a simple sine bumps as a proxy for flares.
@@ -168,6 +169,111 @@ def gen_synthetic_goes_xrs():
                      label='Dashes set retroactively')
     plt.show()
     fig.savefig('C:\\flare_outputs\\2017-07-06\\generated_data\\test.png', dpi=900, bbox_inches='tight')
+
+"""
+    A basic function to create a 1D array of values for a given function with
+    given parameters.
+    Note that the parameters given will vary depending on teh function used.
+    If you wish to combine for datasets of multiple different function types
+    then use gen_synthetic_1D_dataset multiple times and combine the results using numpy.
+
+    Note:
+    When using the signal.ricker(length, a) function, the a defines the wisth of the
+    function we expect, you want length (the number of points calculated) to be notably
+    larger then this value, generally length >= 10x a, to avoid clipping that would
+    cause discontinuities.
+
+    Parameters
+    ----------
+    points : `int`
+        Length or number of points in output array.
+
+    parameters : `list` of `list`
+        For each element in teh list we have a list of all teh parameter values
+        to be passed to the function.
+        E.G. for scipy.signal.ricker(points, a) we would have a list of lists
+        with values for points and a.
+
+    positions : ~`numpy.ndarray` of `int`
+        Ann array giving the position (integer) values for each function
+        contribution to be added.
+
+    function :
+        The function method that will be run for each required entry, with the
+        parameters passed from the parameters array.
+
+    pos_align : `str`
+        Define where the positions relate WRT the resulting function values.
+        Generally safest to use 'centre' and negative values are allowed.
+        'centre': will position the function entry to centre at the given position,
+                so extra point values will roll off the start and end off the output array.
+        'start': will position the function entry to start at the given position,
+                with extra point values rolling off the end of the output array.
+        'centre': will position the function entry to end at the given position,
+                with extra pont values rolling off the begining of the output array.
+
+    verbose : `bool`
+        If True then you will get feedback of values used in the console.
+
+    Returns
+    -------
+    result : ~`numpy.ndarray`
+        The array of the combined function entries with a length of the points parameter.
+
+    Examples
+    --------
+    Make an array which has a single scipy.signal.ricker() function with given
+    parameters at given (central) position:
+
+    >>> import numpy as np
+    >>> import flarepy.synthetic_data_generation as gen
+
+    >>> length = 1000
+    >>> parameters = [[700, 70]] # points and a-value for each wavelet
+    >>> positions = [500] # Central starting position for each wavelet
+    >>> arr_data = gen.gen_synthetic_1D_dataset(length, parameters, positions)
+
+    To make an array which is the sum of a set of 3 scipy.signal.ricker() functions with given parameters.
+
+    >>> length = 1000
+    >>> parameters = [[500, 20],[800, 30],[1000, 40]] # points and a-value for each wavelet
+    >>> positions = [50, 300, 650 ] # Central starting position for each wavelet
+    >>> arr_data = gen.gen_synthetic_1D_dataset(length, parameters, positions)
+
+    To plot this:
+    >>> import matplotlib.pyplot as plt
+    >>> plt.plot(arr_data)
+"""
+def gen_synthetic_1D_dataset(points, parameters, positions, function=signal.ricker, pos_align='centre', verbose=False):
+    # Make a list to add all contributions to
+    lis_contributions = []
+
+    # For each given value (generally arrays of randon numbers)
+    for i in range(0, len(positions)):
+        # Get the function datapoints
+        arr_function = function(*parameters[i])
+
+        # Align the function to start at the given position
+        x_pre_space = positions[i]
+        if pos_align == 'centre':
+            # Align the function to centre on the given position.
+            x_pre_space = x_pre_space - int(len(arr_function) / 2.0)
+        elif pos_align == 'end':
+            # Align the function to end at the given position
+            x_pre_space = x_pre_space - len(arr_function)
+        if verbose:
+            print('positions[i]: '+str(positions[i]))
+            print('x_pre_space: '+str(x_pre_space))
+
+        # Add this entry to the list to be combined
+        lis_contributions.append([x_pre_space, arr_function])
+
+    # Combine into the main dataset
+    arr_out = combine_data(np.zeros(points),lis_contributions)
+
+    # Return
+    return arr_out
+
 
 
 #gen_synthetic_goes_xrs()
