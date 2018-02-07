@@ -15,7 +15,7 @@ db.fetch(a.Time("2011-09-20T01:00:00", "2011-09-20T02:00:00"),
              a.Instrument('AIA'), a.vso.Sample(15*u.min))
 db.commit()
 """
-#import glob
+import glob
 from sunpy.database import Database
 import sunpy.database.attrs as dbattrs
 import datetime
@@ -33,12 +33,13 @@ str_path_sour = 'D:\\work_data\\goes_xrs_source'
 str_path_pre_proc = 'D:\\work_data\\goes_xrs_pre_processed'
 str_path_db_sour = 'D:\\work_data\\db\\db_flarepy_source.sqlite'
 str_path_db_pre_proc = 'D:\\work_data\\db\\db_flarepy_pre-process.sqlite'
-boo_download_data = True
+boo_download_data = False
 boo_add_sour_to_db = True
-boo_neaten_sour_db = True
+boo_neaten_sour_db = False
 boo_concat_data_for_years = False
 boo_import_years_into_pre_proc_db = False
 boo_pre_proc_years = False
+boo_verbose = True
 
 # Delimiters (for storing parameters in filenames)
 str_par = '-'
@@ -53,21 +54,53 @@ db_source = Database('sqlite:///'+str_path_db_sour)
 #db_detections = Database('sqlite:///C:\\Users\\alex_\\sunpy\\db_flarepy_detections.sqlite')
 
 # Download files?
-lis_int_years = list(range(1981,2017))#list(range(1980,2000))
+lis_int_years = list(range(1996,2017))#list(range(1981,2000))
 if boo_download_data:
     utils.goes_utils.get_goes_xrs_year_data(lis_int_years, path=str_path_sour)
 
 # Get the folders
 lis_str_folders = os.walk(str_path_sour)
 
+# Adding the source data files into the database
 if boo_add_sour_to_db:
     dt_start_make_source_db = datetime.datetime.today()
     # Import each folder into the source db
     #for str_year in next(os.walk(str_path_sour))[1]: # Automatically gets all year folders
+
+    # The format by satellite
+    lis_sat_date = [ ['*go02*.fits', '%d/%m/%y'],
+                     ['*go05*.fits', '%d/%m/%y'],
+                     ['*go06*.fits', '%d/%m/%y'],
+                     ['*go07*.fits', '%d/%m/%y'],
+                     ['*go08*.fits', '%d/%m/%y'],
+                     ['*go09*.fits', '%d/%m/%y'],
+                     ['*go10*.fits', '%d/%m/%y'],
+                     ['*go11*.fits', '%d/%m/%Y'],
+                     ['*go12*.fits', '%d/%m/%Y'],
+                     ['*go13*.fits', '%d/%m/%Y'],
+                     ['*go14*.fits', '%d/%m/%Y'],
+                     ['*go15*.fits', '%d/%m/%Y'] ]
+
+    # Add for each year
     for int_year in lis_int_years:
         # Get the folder path
         str_folder_path = str_path_sour + '//' + str(int_year) + '//'
 
+        # Split into batches, because whole years can take hours to add
+        for lis_sat in lis_sat_date:
+            str_patt = lis_sat[0]
+            str_format = lis_sat[1]
+
+            # Check if there are any files
+            if len(glob.glob(str_folder_path+str_patt)) > 0:
+                # Add the files
+                db_source.add_from_dir(str_folder_path, ignore_already_added=True, pattern=str_patt, time_string_parse_format=str_format)
+
+                # Commit the changes to the DB
+                db_source.commit()
+                print(str_patt[3:5]+',', end='')
+
+        """
         # Add all the FITS files for that year
         # GOES 2 has a different datetime format:
         db_source.add_from_dir(str_folder_path, ignore_already_added=True, pattern='*go02*.fits', time_string_parse_format='%d/%m/%y')
@@ -78,18 +111,16 @@ if boo_add_sour_to_db:
         db_source.add_from_dir(str_folder_path, ignore_already_added=True, pattern='*go09*.fits', time_string_parse_format='%d/%m/%y')#1996
         db_source.add_from_dir(str_folder_path, ignore_already_added=True, pattern='*go10*.fits', time_string_parse_format='%d/%m/%y')#1998
         # GOES 2 has a different datetime format
-"""
-Issue adding 1999.
-"""
+        ###Issue adding 1999.
         db_source.add_from_dir(str_folder_path, ignore_already_added=True, pattern='*go12*.fits', time_string_parse_format='%d/%m/%Y')#2002
         db_source.add_from_dir(str_folder_path, ignore_already_added=True, pattern='*go11*.fits', time_string_parse_format='%d/%m/%Y')#2006
         db_source.add_from_dir(str_folder_path, ignore_already_added=True, pattern='*go14*.fits', time_string_parse_format='%d/%m/%Y')#2009
         db_source.add_from_dir(str_folder_path, ignore_already_added=True, pattern='*go15*.fits', time_string_parse_format='%d/%m/%Y')#2010
-        #db_source.add_from_dir(str_folder_path, ignore_already_added=True, pattern='*go11*.fits', time_string_parse_format='%d/%m/%Y')#2011
         db_source.add_from_dir(str_folder_path, ignore_already_added=True, pattern='*go13*.fits', time_string_parse_format='%d/%m/%Y')#2015
-        db_source.commit()
-        print('Added ' + str(int_year) + ' to source DB.')
-    print('Finished changing instrument column for each sat in ' + str(datetime.datetime.today() - dt_start_make_source_db))
+        """
+
+        if boo_verbose: print('\nAdded ' + str(int_year) + ' to source DB.')
+    if boo_verbose: print('Finished changing instrument column for each sat in ' + str(datetime.datetime.today() - dt_start_make_source_db))
 
 # Now run the pre-proccesing
 # Pre-prcess by year
@@ -122,6 +153,8 @@ Database.display_entries(db_source.search(vso.attrs.Time('2013-08-05', '2013-08-
 print(Database.display_entries(db_source.query( dbattrs.FitsHeaderEntry('TELESCOP', 'GOES 15')), ['id', 'observation_time_start', 'observation_time_end', 'instrument', 'wavemin', 'wavemax', 'tags', 'starred'], sort=True))
 print(Database.display_entries(db_source.search( dbattrs.FitsHeaderEntry('TELESCOP', 'GOES 2')), ['id', 'observation_time_start', 'observation_time_end', 'instrument', 'wavemin', 'wavemax', 'tags', 'starred'], sort=True))
 
+print(Database.display_entries(db_source, ['id', 'observation_time_start', 'observation_time_end', 'instrument', 'wavemin', 'wavemax', 'tags', 'starred'], sort=True))
+
 """
 
 if boo_neaten_sour_db:
@@ -142,10 +175,11 @@ if boo_neaten_sour_db:
                 #database_entry.source = fits_entry.value
                 break
     db_source.commit()
-    print('Finished changing instrument column for each sat in ' + str(datetime.datetime.today() - dt_start_neaten))
+    if boo_verbose: print('Finished changing instrument column for each sat in ' + str(datetime.datetime.today() - dt_start_neaten))
 
 
 if boo_concat_data_for_years:
+    if boo_verbose: print('Concatenating by year.')
     dt_start_concat = datetime.datetime.today()
     # For each satellite we can collect the data into yearly datasets
     for int_year in lis_int_years:
@@ -161,7 +195,6 @@ if boo_concat_data_for_years:
 
             # Get the entries during this year for this satellite (note: I add 1 days padding each side)
             #db_batch = db_source.search(vso.attrs.Time(str_year_before+'-12-31 23:59:59', str_year_after+'-01-01 00:00:00'), vso.attrs.Instrument(str_inst))
-            db_batch = db_source.search(vso.attrs.Time(str_year_before+'-12-30 23:59:59', str_year_after+'-01-02 00:00:00'), vso.attrs.Instrument(str_inst))
             # Note: An alternative is to use source vso.attrs.Source(str_inst)
 
             # Make a list of all folders
@@ -206,15 +239,15 @@ if boo_concat_data_for_years:
                 tbl_year.write(str_path_pre_proc + '//' + str_year + '//' + str_year + str_par + 'goes' + str_del + str(int_goes) + '.fits', overwrite=True)
 
             #
-            print('        Finished '+str_year+' '+str_inst+' in ' + str(datetime.datetime.today() - dt_start_year_sat))
+            if boo_verbose: print('        Finished '+str_year+' '+str_inst+' in ' + str(datetime.datetime.today() - dt_start_year_sat))
 
             # Pre-precessing the dataset
-        print('    Finished '+str_year+' in ' + str(datetime.datetime.today() - dt_start_year))
-    print('Finished concatenating all years in ' + str(datetime.datetime.today() - dt_start_concat))
-
-print('Finished the lot in ' + str(datetime.datetime.today() - dt_start_concat))
+        if boo_verbose: print('    Finished '+str_year+' in ' + str(datetime.datetime.today() - dt_start_year))
+    if boo_verbose: print('Finished concatenating all years in ' + str(datetime.datetime.today() - dt_start_concat))
+#if boo_verbose: print('Finished the lot in ' + str(datetime.datetime.today() - dt_start_concat))
 
 if boo_import_years_into_pre_proc_db:
+    if boo_verbose: print('Importing years into pre-processed DB.')
     # Now to create the second database
     db_pre_proc = Database('sqlite:///'+str_path_db_pre_proc)
 
@@ -228,6 +261,7 @@ if boo_import_years_into_pre_proc_db:
         db_source.add_from_dir(str_folder_path, ignore_already_added=True, time_string_parse_format='%d/%m/%Y')
         db_source.commit()
         print('Added ' + str_year + ' raw to source DB.')
+    if boo_verbose: print('Finished importing all years into pre-processed DB.')
 
 if boo_pre_proc_years:
     print('here 1')
@@ -236,7 +270,7 @@ if boo_pre_proc_years:
         # The path for the year
         str_path_year = str_path_pre_proc + '//' + str(int_year) + '//'
 
-        # Foir each satellite
+        # For each satellite
         for int_goes in range(1,16):
             print('here 3')
             # Filepath

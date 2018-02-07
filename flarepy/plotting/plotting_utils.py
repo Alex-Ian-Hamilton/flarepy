@@ -12,6 +12,51 @@ import matplotlib as mpl
 from sunpy.time import parse_time
 import datetime
 
+###############################################################################
+#
+# CWT Plots
+#
+###############################################################################
+
+def plot_cwt_ridges(ridge_lines, filtered_ridge_lines=None, format=None):
+    """
+    A function to plot the ridgelines from a CWT process.
+
+    Parameters
+    ----------
+    ridge_lines : tuple
+        Tuple of 2 1-D sequences. `ridge_lines`[ii][0] are the rows of the ii-th
+        ridge-line, `ridge_lines`[ii][1] are the columns. Empty if none found.
+        Each ridge-line will be sorted by row (increasing), but the order
+        of the ridge lines is not specified.
+
+    Returns
+    -------
+    fig : `~mpl.Figure`
+        A plot figure.
+    """
+    # Plotting the ridge plot
+    # Adding all ridge points
+    x_all = []
+    y_all = []
+    for i, ridge_line in enumerate(ridge_lines):
+        #print('i: '+str(i))
+        for j in range(len(ridge_line[0])):
+            #print('    j: '+str(j))
+            y_all.append(ridge_lines[i][0][j])
+            x_all.append(ridge_lines[i][1][j])
+
+    # Adding the filtered ridge points, those associated with a peak detection
+    x_filtered = []
+    y_filtered = []
+    for i, ridge_line in enumerate(filtered):
+        #print('i: '+str(i))
+        for j in range(len(ridge_line[0])):
+            #print('    j: '+str(j))
+            y_filtered.append(filtered[i][0][j])
+            x_filtered.append(filtered[i][1][j])
+
+
 
 ###############################################################################
 #

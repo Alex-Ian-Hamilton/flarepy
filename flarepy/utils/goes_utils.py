@@ -94,7 +94,7 @@ def get_goes_xrs_year_data(years, path=""):
 
 def get_goes_xrs_data_as_df(start, end):
     """
-    Downloads a fits file for each day in teh given range and concatenate into
+    Downloads a fits file for each day in the given range and concatenate into
     a single Pandas DataFrame.
 
     Note: this doesn't deal well with different satelites, it simply uses the
